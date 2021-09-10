@@ -4,6 +4,9 @@
   "main": "index.ts",
   "repository": "https://github.com/DexKit/wizard-contracts.git",
   "author": "JoaoCampos89 <info@dexkit.com>",
+  "scripts": {
+    "compile": "npx hardhat compile"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",

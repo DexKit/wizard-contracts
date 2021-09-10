@@ -1,6 +1,5 @@
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
-import "hardhat-gas-reporter"
 
 import * as dotenv from 'dotenv';
 
@@ -18,7 +17,7 @@ const { ALCHEMY_API } = process.env;
   solidity: {
     compilers: [
       {
-        version: "0.8.0",
+        version: "0.8.2",
       },
       {
         version: "0.6.0",
@@ -33,8 +32,5 @@ const { ALCHEMY_API } = process.env;
         blockNumber: 12956195
       }
     }
-  },
-  gasReporter: {
-    enabled: true
   }
 };
