@@ -1,36 +1,65 @@
-//SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract COLLECTION is ERC721, ERC721URIStorage, Ownable {
+contract Collection is
+    ERC721,
+    ERC721Enumerable,
+    ERC721URIStorage,
+    ERC721Royalty,
+    Ownable
+{
     using Counters for Counters.Counter;
+
     Counters.Counter private _tokenIdCounter;
+
     struct ItemParam {
         address to;
         string tokenURI;
     }
 
-    string _contractURI;
-
-    constructor(string memory name_, string memory symbol_, string memory contractURI_)
-     ERC721(name_, symbol_) {
-        _contractURI = contractURI_;
-
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint96 royaltyValue
+    ) ERC721(name_, symbol_) {
+        _setDefaultRoyalty(_msgSender(), royaltyValue);
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "ipfs://";
+    function safeMint(address to, string memory uri) public onlyOwner {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
     }
 
-    function contractURI() public view returns (string memory) {
-        return string(abi.encodePacked("ipfs://", _contractURI));
+    function multiSafeMint(ItemParam[] memory items) public onlyOwner {
+        for (uint256 i = 0; i < items.length; i++) {
+            safeMint(items[i].to, items[i].tokenURI);
+        }
     }
 
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+    // The following functions are overrides required by Solidity.
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function _burn(uint256 tokenId)
+        internal
+        override(ERC721, ERC721URIStorage, ERC721Royalty)
+    {
         super._burn(tokenId);
     }
 
@@ -43,22 +72,12 @@ contract COLLECTION is ERC721, ERC721URIStorage, Ownable {
         return super.tokenURI(tokenId);
     }
 
-    function setTokenURI(uint256 tokenId_, string memory tokenURI_) public onlyOwner {
-        _setTokenURI(tokenId_, tokenURI_);
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable, ERC721Royalty)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
-
-     function multiSafeMint(ItemParam[] memory items) public onlyOwner {
-        for (uint i = 0; i < items.length; i++) {
-            _safeMint(items[i].to, _tokenIdCounter.current());
-            _setTokenURI(_tokenIdCounter.current(), items[i].tokenURI);
-            _tokenIdCounter.increment();
-        }      
-    }
-
-     function safeMint(address to, string memory tokenURI_) public onlyOwner {
-        _safeMint(to, _tokenIdCounter.current());
-        _setTokenURI(_tokenIdCounter.current(), tokenURI_);
-        _tokenIdCounter.increment();
-    }
-
 }
